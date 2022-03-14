@@ -1,13 +1,33 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
-import Loader from '../Components/Loader'
-import toast from 'react-hot-toast'
+import PostFeed from '../Components/PostFeed';
+import Loader from '../Components/Loader';
+import { firestore, postToJSON, getIt } from '../lib/firebase';
+import { Timestamp, query, where, orderBy, limit, collectionGroup, getDocs, startAfter, getFirestore } from 'firebase/firestore';
+
+import { useState } from 'react';
+
+// mac post to query per page
+const LIMIT = 1;
+
+export async function getServerSideProps(context) {
+  const ref = collectionGroup(getFirestore(), 'posts');
+  const postQuery = query(
+    ref,
+    where('published', '==', true),
+    orderBy('createdAt', 'desc'),
+    limit(LIMIT),
+  )
+  
+  const posts = (await getDocs(postQuery)).docs.map(postToJSON);
+
+  return {
+    props: {posts}, // will be passed to the page component as props
+  }
+}
 
 export default function Home() {
   return (
-  <>
-    <button onClick={() => toast.success('hello toast!')}>Toast me!</button>
-  </>
+  <Main>
+   
+  </Main>
   )
 }
