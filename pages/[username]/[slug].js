@@ -50,9 +50,27 @@ export async function getStaticPaths() {
     }
 }
 
-export default function Post({}) {
+export default function Post(props) {
+    const postRef = doc(getFirestore(), props.path);
+    const [realtimePost] = useDocumentData(postRef);
+
+    const post = realtimePost || props.post;
+
+    const {user: currentUser } = useContext(UserContext);
+
     return(
-        <main>
+        <main className={styles.container}>
+
+            <section>
+                <PostContent post={post} />
+            </section>
+
+            <aside className="card">
+                <p>
+                    <strong>{post.heartCount || 0} 🤍</strong>
+                </p>
+
+            </aside>
         
         </main>
     )
