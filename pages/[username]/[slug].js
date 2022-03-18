@@ -30,6 +30,26 @@ export async function getStaticProps({ params }) {
 }
 
 
+export async function getStaticPaths() {
+    const q = query(
+        collectionGroup(getFirestore(), 'posts'),
+        limit(20)
+    )
+    const snapshot = await getDocs(q);
+
+    const paths = snapshot.docs.map((doc) => {
+        const {slug, username} = doc.data();
+        return {
+            params: {username, slug}
+        }
+    })
+
+    return {
+        paths, 
+        fallback: 'blocking',
+    }
+}
+
 export default function Post({}) {
     return(
         <main>
