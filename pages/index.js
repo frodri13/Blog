@@ -1,6 +1,6 @@
 import PostFeed from '../Components/PostFeed';
 import Loader from '../Components/Loader';
-import { firestore, postToJSON, getIt } from '../lib/firebase';
+import {  postToJSON } from '../lib/firebase';
 import { Timestamp, query, where, orderBy, limit, collectionGroup, getDocs, startAfter, getFirestore } from 'firebase/firestore';
 
 import { useState } from 'react';
@@ -24,10 +24,52 @@ export async function getServerSideProps(context) {
   }
 }
 
-export default function Home() {
+
+
+export default function Home(props) {
+  const [posts, setPosts] = useState(props.posts);
+  const [loading, setLoading] = useState(false);
+
+  const [postsEnd, setPostsEnd] = useState(false);
+
+  const getMorePosts = async () => {
+    setLoading(true);
+    const last = posts[posts.length - 1];
+
+  
+
+    const cursor = typeof last.createdAt === 'number' ? Timestamp.fromMillis(last.createdAt) : last.createdAt;
+    
+    const ref = collectionGroup(getFirestore, 'posts');
+    const postsQuery = query(
+      ref, 
+      where('published', '==', true),
+      orderBy('createdAt', 'desc'),
+      startAfter(cursor),
+      limit(LIMIT),
+    )
+
+    const newPosts = (await getDocs(postsQuery)).docs.map((doc) => doc.data());
+
+    setPosts(posts.concat(newPosts));
+    setLoading(false);
+
+    if (newPosts.length < LIMIT) {
+      setPostsEnd(true);
+    }
+ 
+  }
+
+
   return (
-  <Main>
+  <main>
+    <PostFeed posts = {posts} />
+
+    {!loading && !postsEnd && <button onClick={getMorePosts}>Load More</button> }
    
-  </Main>
+    <Loader show={loading} />
+
+    {postsEnd && 'You have reached the end'}
+  </main>
   )
 }
